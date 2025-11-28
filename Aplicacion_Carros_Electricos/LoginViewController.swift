@@ -1,177 +1,338 @@
-//
-//  ViewController.swift
-//  Aplicacion_Carros_Electricos
-//
-//  Created by donlike on 26/11/25.
-//
-
 import UIKit
 
 class LoginViewController: UIViewController {
 
-    // MARK: - Propiedades de la UI (Declaración de Componentes)
-
-    // Fondo verde menta
-    let backgroundColor = UIColor(red: 144/255, green: 238/255, blue: 144/255, alpha: 1.0)
+    // MARK: - Color Palette
     
-    // Label de título "¡BIENVENIDO! FULL CHARGE"
+    private let darkBackground = UIColor(red: 18/255, green: 18/255, blue: 18/255, alpha: 1.0)
+    private let neonGreen = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
+    private let lightGray = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+    private let cardBackground = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
+    
+    // MARK: - UI Components
+    
+    private let iconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
+        imageView.image = UIImage(systemName: "bolt.fill")
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "¡BIENVENIDO!\nFULL CHARGE"
-        label.textColor = .black // El color en tu diseño es muy oscuro, lo dejaré en negro para mejor legibilidad.
-        label.font = UIFont.systemFont(ofSize: 30, weight: .bold)
-        label.numberOfLines = 2
-        label.textAlignment = .left // Alineado a la izquierda
-        label.translatesAutoresizingMaskIntoConstraints = false // Esencial para Auto Layout programático
+        label.text = "FULL CHARGE"
+        label.textColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
+        label.font = UIFont.systemFont(ofSize: 36, weight: .black)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    // Label e Input para Usuario
+    private let subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Centro de Carga Eléctrica"
+        label.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 0.7)
+        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let inputContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
+        view.layer.cornerRadius = 20
+        view.layer.shadowColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 0.3).cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 15
+        view.layer.shadowOpacity = 1.0
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let userLabel: UILabel = {
         let label = UILabel()
-        label.text = "Ingrese su usuario:"
-        label.textColor = .black
-        label.font = UIFont.systemFont(ofSize: 18, weight: .regular)
+        label.text = "Usuario"
+        label.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let userTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Usuario"
-        tf.borderStyle = .roundedRect
-        tf.backgroundColor = .white // Fondo blanco para el input
+        tf.placeholder = "Ingrese su usuario"
+        tf.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+        tf.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        tf.backgroundColor = UIColor(red: 40/255, green: 40/255, blue: 40/255, alpha: 1.0)
+        tf.layer.cornerRadius = 12
+        tf.layer.borderWidth = 1.5
+        tf.layer.borderColor = UIColor(red: 60/255, green: 60/255, blue: 60/255, alpha: 1.0).cgColor
+        
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 44))
+        tf.leftView = paddingView
+        tf.leftViewMode = .always
+        
+        tf.attributedPlaceholder = NSAttributedString(
+            string: "Ingrese su usuario",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 0.4)]
+        )
+        
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
 
-    // Label e Input para Contraseña
     private let passwordLabel: UILabel = {
         let label = UILabel()
-        label.text = "Ingrese su contraseña:"
-        label.textColor = .black
-        label.font = UIFont.systemFont(ofSize: 18, weight: .regular)
+        label.text = "Contraseña"
+        label.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let passwordTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Contraseña"
-        tf.isSecureTextEntry = true // Para ocultar la contraseña
-        tf.borderStyle = .roundedRect
-        tf.backgroundColor = .white
+        tf.placeholder = "Ingrese su contraseña"
+        tf.isSecureTextEntry = true
+        tf.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+        tf.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        tf.backgroundColor = UIColor(red: 40/255, green: 40/255, blue: 40/255, alpha: 1.0)
+        tf.layer.cornerRadius = 12
+        tf.layer.borderWidth = 1.5
+        tf.layer.borderColor = UIColor(red: 60/255, green: 60/255, blue: 60/255, alpha: 1.0).cgColor
+        
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 44))
+        tf.leftView = paddingView
+        tf.leftViewMode = .always
+        
+        tf.attributedPlaceholder = NSAttributedString(
+            string: "Ingrese su contraseña",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 0.4)]
+        )
+        
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
 
-    // Botón de INICIAR SECCION
     private let loginButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("INICIAR SECCION", for: .normal)
+        button.setTitle("INICIAR SESIÓN", for: .normal)
         button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = .clear // Transparente
-        button.layer.borderColor = UIColor.black.cgColor
-        button.layer.borderWidth = 1.0
-        button.layer.cornerRadius = 8 // Bordes redondeados sutiles
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        button.backgroundColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
+        button.layer.cornerRadius = 12
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        
+        button.layer.shadowColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 0.6).cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 4)
+        button.layer.shadowRadius = 12
+        button.layer.shadowOpacity = 1.0
+        
         button.translatesAutoresizingMaskIntoConstraints = false
-        // Agrega una acción (debes implementarla)
         button.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
         return button
     }()
 
-    // Botón de crear cuenta (amarillo)
+    private let separatorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "o"
+        label.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 0.5)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
     private let registerButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("crear cuenta", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = UIColor(red: 255/255, green: 255/255, blue: 0/255, alpha: 1.0) // Amarillo brillante
-        button.layer.cornerRadius = 20 // Bordes muy redondeados para el estilo
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        button.setTitle("Crear Cuenta Nueva", for: .normal)
+        button.setTitleColor(UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0), for: .normal)
+        button.backgroundColor = .clear
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0).cgColor
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
-        // Agrega una acción (para ir a la siguiente pantalla)
         button.addTarget(self, action: #selector(handleRegister), for: .touchUpInside)
         return button
     }()
 
-    // MARK: - Ciclo de Vida de la Vista
+    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = backgroundColor
+        view.backgroundColor = darkBackground
         setupUI()
+        setupKeyboardDismiss()
     }
     
-    // MARK: - Configuración de la UI y Constraints
+    // MARK: - UI Setup
     
     private func setupUI() {
-        // 1. Agregar todos los subviews
+        view.addSubview(iconImageView)
         view.addSubview(titleLabel)
-        view.addSubview(userLabel)
-        view.addSubview(userTextField)
-        view.addSubview(passwordLabel)
-        view.addSubview(passwordTextField)
+        view.addSubview(subtitleLabel)
+        view.addSubview(inputContainerView)
         view.addSubview(loginButton)
+        view.addSubview(separatorLabel)
         view.addSubview(registerButton)
-
-        // 2. Definir las Constraints (Auto Layout)
         
-        // Espacio para la izquierda (padding)
+        inputContainerView.addSubview(userLabel)
+        inputContainerView.addSubview(userTextField)
+        inputContainerView.addSubview(passwordLabel)
+        inputContainerView.addSubview(passwordTextField)
+        
         let horizontalPadding: CGFloat = 30
+        let containerPadding: CGFloat = 24
         
         NSLayoutConstraint.activate([
-            // Título: Arriba y a la Izquierda
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -horizontalPadding),
-
-            // Label de Usuario: Debajo del Título
-            userLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 40),
-            userLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
-
-            // Text Field de Usuario: Debajo del Label de Usuario
+            iconImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            iconImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 60),
+            iconImageView.heightAnchor.constraint(equalToConstant: 60),
+            
+            titleLabel.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 16),
+            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            subtitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            inputContainerView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
+            inputContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
+            inputContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -horizontalPadding),
+            
+            userLabel.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: containerPadding),
+            userLabel.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: containerPadding),
+            
             userTextField.topAnchor.constraint(equalTo: userLabel.bottomAnchor, constant: 8),
-            userTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
-            userTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -horizontalPadding),
-            userTextField.heightAnchor.constraint(equalToConstant: 44),
-
-            // Label de Contraseña: Debajo del Text Field de Usuario
+            userTextField.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: containerPadding),
+            userTextField.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -containerPadding),
+            userTextField.heightAnchor.constraint(equalToConstant: 50),
+            
             passwordLabel.topAnchor.constraint(equalTo: userTextField.bottomAnchor, constant: 20),
-            passwordLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
-
-            // Text Field de Contraseña: Debajo del Label de Contraseña
+            passwordLabel.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: containerPadding),
+            
             passwordTextField.topAnchor.constraint(equalTo: passwordLabel.bottomAnchor, constant: 8),
-            passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
-            passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -horizontalPadding),
-            passwordTextField.heightAnchor.constraint(equalToConstant: 44),
+            passwordTextField.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: containerPadding),
+            passwordTextField.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -containerPadding),
+            passwordTextField.heightAnchor.constraint(equalToConstant: 50),
+            passwordTextField.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -containerPadding),
             
-            // Botón INICIAR SECCION: Debajo de los inputs
-            loginButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 40),
-            loginButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loginButton.widthAnchor.constraint(equalToConstant: 180), // Ancho fijo
-            loginButton.heightAnchor.constraint(equalToConstant: 50),
+            loginButton.topAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: 30),
+            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
+            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -horizontalPadding),
+            loginButton.heightAnchor.constraint(equalToConstant: 56),
             
-            // Botón crear cuenta: Cerca de la parte inferior
-            registerButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            registerButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            registerButton.widthAnchor.constraint(equalToConstant: 180), // Ancho fijo
-            registerButton.heightAnchor.constraint(equalToConstant: 50)
+            separatorLabel.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 20),
+            separatorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            registerButton.topAnchor.constraint(equalTo: separatorLabel.bottomAnchor, constant: 20),
+            registerButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: horizontalPadding),
+            registerButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -horizontalPadding),
+            registerButton.heightAnchor.constraint(equalToConstant: 56)
         ])
     }
+    
+    // MARK: - Keyboard Handling
+    
+    private func setupKeyboardDismiss() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
 
-    // MARK: - Acciones (Ejemplo de Navegación)
+    // MARK: - Actions
     
     @objc private func handleLogin() {
-        print("Intentando iniciar sesión con: \(userTextField.text ?? "")")
-        // Aquí iría la lógica de autenticación
+        // Validación básica
+        guard let username = userTextField.text, !username.isEmpty,
+              let password = passwordTextField.text, !password.isEmpty else {
+            showErrorAlert(message: "Por favor ingresa usuario y contraseña")
+            return
+        }
+        
+        // Animación de feedback del botón
+        UIView.animate(withDuration: 0.1, animations: {
+            self.loginButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.loginButton.transform = .identity
+            }
+        }
+        
+        // Deshabilitar botón mientras se procesa
+        loginButton.isEnabled = false
+        loginButton.alpha = 0.6
+        
+        // Simular llamada a API (reemplaza con tu lógica real)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.performLoginSuccess()
+        }
+    }
+    
+    private func performLoginSuccess() {
+        // Animación de fade out con efecto de brillo verde
+        UIView.animate(withDuration: 0.3, animations: {
+            self.view.alpha = 0.0
+            self.loginButton.layer.shadowRadius = 30
+            self.loginButton.layer.shadowOpacity = 1.0
+        }) { _ in
+            // Transición al FeedViewController
+            self.transitionToFeedViewController()
+        }
+    }
+    
+    private func transitionToFeedViewController() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate,
+              let window = sceneDelegate.window else {
+            return
+        }
+        
+        let feedVC = FeedViewController()
+        
+        // Transición suave
+        UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: {
+            window.rootViewController = feedVC
+        }) { _ in
+            // Restaurar estado
+            self.view.alpha = 1.0
+            self.loginButton.isEnabled = true
+            self.loginButton.alpha = 1.0
+            self.loginButton.layer.shadowRadius = 12
+        }
+    }
+    
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+        
+        // Restaurar botón
+        loginButton.isEnabled = true
+        loginButton.alpha = 1.0
     }
     
     @objc private func handleRegister() {
-        // Navegar a la pantalla de Registro
+        // Animación de feedback del botón
+        UIView.animate(withDuration: 0.1, animations: {
+            self.registerButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.registerButton.transform = .identity
+            }
+        }
+        
+        // Crear y presentar el RegistrationViewController
         let registrationVC = RegistrationViewController()
         registrationVC.modalPresentationStyle = .fullScreen
+        registrationVC.modalTransitionStyle = .coverVertical
+        
         present(registrationVC, animated: true, completion: nil)
     }
 }
-
