@@ -1,6 +1,5 @@
 import UIKit
 
-// MARK: - FeedViewController
 
 class FeedViewController: UIViewController {
 
@@ -11,7 +10,6 @@ class FeedViewController: UIViewController {
     private let cardBackground = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
     private let softGray = UIColor(red: 42/255, green: 42/255, blue: 42/255, alpha: 1.0)
 
-    // MARK: - UI Components
 
     private let headerView: UIView = {
         let view = UIView()
