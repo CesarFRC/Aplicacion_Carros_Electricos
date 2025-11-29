@@ -3,7 +3,6 @@ import UIKit
 
 class FeedViewController: UIViewController {
 
-    // MARK: - Color Palette
     private let darkBackground = UIColor(red: 18/255, green: 18/255, blue: 18/255, alpha: 1.0)
     private let neonGreen = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
     private let lightGray = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
@@ -105,13 +104,10 @@ class FeedViewController: UIViewController {
 
     private var collectionView: UICollectionView!
     
-    // --- Datos de ejemplo de Vehículos ---
     private var vehicles: [Vehicle] = [
-        // NOTA: Se agregaron las propiedades que necesita VehicleDetailController
         Vehicle(name: "Honda Civic", imageName: "honda_civic_red", battery: 85, status: "Cargando", chargeLevel: 85, humidity: 45, temperature: 25.5),
     ]
 
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -124,7 +120,6 @@ class FeedViewController: UIViewController {
         updateVehicleCount()
     }
 
-    // MARK: - UI Setup
 
     private func setupHeaderView() {
         view.addSubview(headerView)
@@ -226,11 +221,15 @@ class FeedViewController: UIViewController {
     }
 
     private func presentAddVehicleScreen() {
-        print("Mostrar pantalla para agregar nuevo vehículo")
+        print("Navegando a la pantalla de Agregar Vehículo.")
+        
+        let addVC = AddVehicleController()
+        
+        addVC.modalPresentationStyle = .fullScreen
+        present(addVC, animated: true)
     }
 }
 
-// MARK: - UICollectionViewDataSource
 
 extension FeedViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -254,7 +253,6 @@ extension FeedViewController: UICollectionViewDataSource {
     }
 }
 
-// MARK: - UICollectionViewDelegateFlowLayout
 
 extension FeedViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -264,46 +262,32 @@ extension FeedViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: itemWidth, height: itemWidth * 1.3)
     }
     
-    // FUNCIÓN CLAVE: didSelectItemAt es el manejador de clics en las celdas
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // 1. Verificar si la celda seleccionada es un vehículo (índice menor al total de vehículos)
         if indexPath.item < vehicles.count {
             
-            // 2. Obtener la información del vehículo específico
             let selectedVehicle = vehicles[indexPath.item]
             print("Navegando al detalle del vehículo: \(selectedVehicle.name)")
             
-            // 3. Instanciar el controlador de destino (VehicleDetailController)
-            // Se le pasa el objeto 'vehicle' con todos sus datos.
             let detailVC = VehicleDetailController(vehicle: selectedVehicle)
-            
-            // 4. Presentar la nueva pantalla con una animación
             detailVC.modalPresentationStyle = .fullScreen
             present(detailVC, animated: true)
             
         } else {
-            // Si el índice es igual al total de vehículos, es el botón de "Agregar"
             presentAddVehicleScreen()
         }
     }
 }
-
-// MARK: - Modelo de Datos
-// El struct Vehicle contiene todos los datos que se pasan a la pantalla de detalle.
 
 struct Vehicle {
     let name: String
     let imageName: String
     let battery: Int
     let status: String
-    // Propiedades necesarias para VehicleDetailController
     let chargeLevel: Int
     let humidity: Int
     let temperature: Double
 }
 
-// MARK: - Custom Cells
-// (Las clases VehicleCell y AddVehicleCell están definidas para el diseño de la colección)
 
 class VehicleCell: UICollectionViewCell {
     static let reuseIdentifier = "VehicleCell"

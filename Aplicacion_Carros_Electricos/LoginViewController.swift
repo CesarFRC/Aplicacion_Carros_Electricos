@@ -2,14 +2,12 @@ import UIKit
 
 class LoginViewController: UIViewController {
 
-    // MARK: - Color Palette
     
     private let darkBackground = UIColor(red: 18/255, green: 18/255, blue: 18/255, alpha: 1.0)
     private let neonGreen = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
     private let lightGray = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
     private let cardBackground = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
     
-    // MARK: - UI Components
     
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
@@ -159,7 +157,6 @@ class LoginViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -168,7 +165,6 @@ class LoginViewController: UIViewController {
         setupKeyboardDismiss()
     }
     
-    // MARK: - UI Setup
     
     private func setupUI() {
         view.addSubview(iconImageView)
@@ -235,7 +231,6 @@ class LoginViewController: UIViewController {
         ])
     }
     
-    // MARK: - Keyboard Handling
     
     private func setupKeyboardDismiss() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
@@ -246,17 +241,14 @@ class LoginViewController: UIViewController {
         view.endEditing(true)
     }
 
-    // MARK: - Actions
     
     @objc private func handleLogin() {
-        // Validación básica
         guard let username = userTextField.text, !username.isEmpty,
               let password = passwordTextField.text, !password.isEmpty else {
             showErrorAlert(message: "Por favor ingresa usuario y contraseña")
             return
         }
         
-        // Animación de feedback del botón
         UIView.animate(withDuration: 0.1, animations: {
             self.loginButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
         }) { _ in
@@ -265,24 +257,20 @@ class LoginViewController: UIViewController {
             }
         }
         
-        // Deshabilitar botón mientras se procesa
         loginButton.isEnabled = false
         loginButton.alpha = 0.6
         
-        // Simular llamada a API (reemplaza con tu lógica real)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.performLoginSuccess()
         }
     }
     
     private func performLoginSuccess() {
-        // Animación de fade out con efecto de brillo verde
         UIView.animate(withDuration: 0.3, animations: {
             self.view.alpha = 0.0
             self.loginButton.layer.shadowRadius = 30
             self.loginButton.layer.shadowOpacity = 1.0
         }) { _ in
-            // Transición al FeedViewController
             self.transitionToFeedViewController()
         }
     }
@@ -296,11 +284,9 @@ class LoginViewController: UIViewController {
         
         let feedVC = FeedViewController()
         
-        // Transición suave
         UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: {
             window.rootViewController = feedVC
         }) { _ in
-            // Restaurar estado
             self.view.alpha = 1.0
             self.loginButton.isEnabled = true
             self.loginButton.alpha = 1.0
@@ -313,13 +299,11 @@ class LoginViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
         
-        // Restaurar botón
         loginButton.isEnabled = true
         loginButton.alpha = 1.0
     }
     
     @objc private func handleRegister() {
-        // Animación de feedback del botón
         UIView.animate(withDuration: 0.1, animations: {
             self.registerButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
         }) { _ in
@@ -328,7 +312,6 @@ class LoginViewController: UIViewController {
             }
         }
         
-        // Crear y presentar el RegistrationViewController
         let registrationVC = RegistrationViewController()
         registrationVC.modalPresentationStyle = .fullScreen
         registrationVC.modalTransitionStyle = .coverVertical
