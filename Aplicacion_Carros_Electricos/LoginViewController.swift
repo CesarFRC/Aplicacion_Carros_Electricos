@@ -1,5 +1,22 @@
 import UIKit
 
+// MARK: - Modelos de Datos Actualizados para la API
+// Usaremos Codable para manejar la respuesta JSON.
+
+struct UserData: Codable {
+    // El ID real de MongoDB, usamos CodingKeys si necesitamos un nombre de propiedad diferente
+    let _id: String
+    let usuario: String
+    let nombre: String
+    let correo: String
+}
+
+struct LoginResponse: Codable {
+    let token: String
+    let user: UserData // El ID está anidado aquí
+}
+
+
 class LoginViewController: UIViewController {
 
     
@@ -8,7 +25,9 @@ class LoginViewController: UIViewController {
     private let lightGray = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
     private let cardBackground = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
     
-    
+    // ... (El resto de tus definiciones de UI components aquí) ...
+    // Se omiten por espacio, pero deben estar las mismas que tienes.
+
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -281,6 +300,8 @@ class LoginViewController: UIViewController {
     }
     
     private func performLogin(userInput: String, password: String) {
+        // ... (Tu función performLogin sin cambios) ...
+
         guard let url = URL(string: "http://34.224.27.117/usuario/ingresar") else {
             showErrorAlert(message: "URL inválida")
             return
@@ -372,24 +393,22 @@ class LoginViewController: UIViewController {
     
     private func handleLoginSuccess(data: Data) {
         do {
-            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                
-                print("Login exitoso")
-                
-                // Mensaje de éxito
-                if let mensaje = json["mensaje"] as? String {
-                    print("Mensaje: \(mensaje)")
-                }
-                
-                // Transición exitosa
-                performLoginSuccessAnimation()
-                
-            } else {
-                showErrorAlert(message: "Respuesta del servidor inválida")
-            }
+            // ⭐️ Usamos JSONDecoder para decodificar la estructura anidada
+            let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
+            
+            // ⭐️ EXTRAEMOS y GUARDAMOS EL ID DEL USUARIO
+            let userId = loginResponse.user._id
+            SessionManager.shared.currentUserID = userId
+            
+            print("Login exitoso. ID de Usuario guardado: \(userId)")
+            
+            // Transición exitosa
+            performLoginSuccessAnimation()
+
         } catch {
             print("Error al parsear respuesta: \(error)")
-            showErrorAlert(message: "Error al procesar la respuesta del servidor")
+            // Opcional: print("Datos recibidos: \(String(data: data, encoding: .utf8) ?? "N/A")")
+            showErrorAlert(message: "Error al procesar la respuesta del servidor o formato JSON inesperado.")
         }
     }
     
@@ -410,6 +429,7 @@ class LoginViewController: UIViewController {
             return
         }
         
+        // ⭐️ Ya no necesitamos pasar el ID, FeedViewController lo leerá del SessionManager
         let feedVC = FeedViewController()
         
         UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: {
@@ -459,9 +479,4 @@ extension LoginViewController: UITextFieldDelegate {
         }
         return true
     }
-}
-
-// MARK: - Models
-struct LoginResponse: Codable {
-    let mensaje: String
 }

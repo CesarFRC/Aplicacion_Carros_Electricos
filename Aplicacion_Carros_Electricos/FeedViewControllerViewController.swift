@@ -1,15 +1,45 @@
 import UIKit
 
+// MARK: - Modelos de Datos CORREGIDOS
+// Se hacen opcionales los campos que no vienen en la respuesta de la API de vehículos,
+// como 'usuario_id' y 'año', para evitar el error keyNotFound.
+struct VehiculoAPI: Codable {
+    let id: String
+    let marca: String
+    let modelo: String
+    let estado: String
+    
+    // Estos campos ya no vienen en la API de vehiculos, se declaran como opcionales
+    let usuarioId: String?
+    let año: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case marca, modelo, estado
+        case usuarioId = "usuario_id"
+        case año
+    }
+}
+
+// Modelo interno para la UI, con valores por defecto
+struct Vehicle {
+    let id: String
+    let marca: String
+    let modelo: String
+    let año: Int // Mantener como Int para el modelo interno, pero será 0
+    let estado: String
+    let cargaBateria: Int // Este campo ya no se usará en la UI, pero se mantiene en el modelo
+}
 
 class FeedViewController: UIViewController {
 
+    
     private let darkBackground = UIColor(red: 18/255, green: 18/255, blue: 18/255, alpha: 1.0)
     private let neonGreen = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
     private let lightGray = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
     private let cardBackground = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
     private let softGray = UIColor(red: 42/255, green: 42/255, blue: 42/255, alpha: 1.0)
-
-
+    
     private let headerView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
@@ -36,53 +66,9 @@ class FeedViewController: UIViewController {
         return label
     }()
     
-    private let userCard: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor(red: 42/255, green: 42/255, blue: 42/255, alpha: 1.0)
-        view.layer.cornerRadius = 16
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.3
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let userAvatarView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 0.2)
-        view.layer.cornerRadius = 25
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let userAvatarLabel: UILabel = {
-        let label = UILabel()
-        label.text = "JP"
-        label.textColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let userNameLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Juan Pérez Ramírez"
-        label.textColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let userSubtitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Conductor Verificado"
-        label.textColor = UIColor(red: 180/255, green: 180/255, blue: 180/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    // ⭐ ELIMINAMOS logoutButton y su lógica
+    // private lazy var logoutButton: UIButton = { ... }()
+    // @objc private func logoutTapped() { ... }
     
     private let sectionTitleLabel: UILabel = {
         let label = UILabel()
@@ -95,7 +81,7 @@ class FeedViewController: UIViewController {
     
     private let vehicleCountLabel: UILabel = {
         let label = UILabel()
-        label.text = "1 vehículo"
+        label.text = "Cargando..."
         label.textColor = UIColor(red: 180/255, green: 180/255, blue: 180/255, alpha: 1.0)
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -103,28 +89,157 @@ class FeedViewController: UIViewController {
     }()
 
     private var collectionView: UICollectionView!
-    
-    private var vehicles: [Vehicle] = [
-        Vehicle(name: "Honda Civic", imageName: "honda_civic_red", battery: 85, status: "Cargando", chargeLevel: 85, humidity: 45, temperature: 25.5),
-    ]
-
+    private var vehicles: [Vehicle] = []
+    private var isLoading = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = darkBackground
         setupHeaderView()
-        setupUserCard()
         setupSectionHeader()
         setupCollectionView()
         registerCells()
-        updateVehicleCount()
+        
+        guard UserSession.shared.isLoggedIn else {
+            print("❌ No hay usuario logueado, redirigiendo al login...")
+            showEmptyState()
+            return
+        }
+        
+        fetchVehicleData()
     }
 
+    // MARK: - Fetch Data from API
+    private func fetchVehicleData() {
+        guard !isLoading else { return }
+        
+        guard let usuarioId = UserSession.shared.userId else {
+            print("❌ No hay ID de usuario guardado")
+            showEmptyState()
+            return
+        }
+        
+        isLoading = true
+        updateVehicleCount()
+        
+        let urlString = "http://34.224.27.117/usuario/vehiculos/\(usuarioId)"
+        guard let url = URL(string: urlString) else {
+            print("❌ URL inválida: \(urlString)")
+            DispatchQueue.main.async {
+                self.isLoading = false
+                self.updateVehicleCount()
+            }
+            return
+        }
+        
+        print("🌐 Haciendo petición a: \(urlString)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
+            if let error = error {
+                print("❌ Error en la petición: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showEmptyState()
+                }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 Código de respuesta: \(httpResponse.statusCode)")
+                
+                if httpResponse.statusCode != 200 {
+                    print("❌ Error del servidor: código \(httpResponse.statusCode)")
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        self.showEmptyState()
+                    }
+                    return
+                }
+            }
+            
+            guard let data = data else {
+                print("❌ No se recibieron datos")
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showEmptyState()
+                }
+                return
+            }
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📦 Datos recibidos: \(jsonString)")
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                // Decodificar como ARRAY de VehiculoAPI
+                let vehiculosAPI = try decoder.decode([VehiculoAPI].self, from: data)
+                
+                print("✅ \(vehiculosAPI.count) Vehículo(s) decodificado(s) de la API.")
+                
+                // Mapear los modelos de API a tus modelos de UI (Vehicle)
+                let vehicles = vehiculosAPI.map { apiVehicle in
+                    // Ya no usamos apiVehicle.año, usamos 0 como valor predeterminado
+                    return Vehicle(
+                        id: apiVehicle.id,
+                        marca: apiVehicle.marca,
+                        modelo: apiVehicle.modelo,
+                        año: 0, // Fijo en 0
+                        estado: apiVehicle.estado,
+                        cargaBateria: 0 // Valor temporal
+                    )
+                }
+                
+                // ⭐ ACTUALIZACIÓN DE UI EN HILO PRINCIPAL
+                DispatchQueue.main.async {
+                    self.vehicles = vehicles
+                    self.isLoading = false
+                    self.updateVehicleCount()
+                    self.collectionView.reloadData()
+                    print("✅ UI actualizada con \(self.vehicles.count) vehículo(s)")
+                }
+                
+            } catch {
+                print("❌ Error al decodificar JSON: \(error)")
+                if let decodingError = error as? DecodingError {
+                    switch decodingError {
+                    case .keyNotFound(let key, let context):
+                        print("    Key '\(key.stringValue)' no encontrada: \(context.debugDescription)")
+                    case .typeMismatch(let type, let context):
+                        print("    Type mismatch para tipo \(type): \(context.debugDescription)")
+                    case .valueNotFound(let type, let context):
+                        print("    Valor no encontrado para tipo \(type): \(context.debugDescription)")
+                    case .dataCorrupted(let context):
+                        print("    Datos corruptos: \(context.debugDescription)")
+                    @unknown default:
+                        print("    Error de decodificación desconocido")
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showEmptyState()
+                }
+            }
+        }.resume()
+    }
+    
+    private func showEmptyState() {
+        vehicles = []
+        updateVehicleCount()
+        collectionView.reloadData()
+    }
 
     private func setupHeaderView() {
         view.addSubview(headerView)
         headerView.addSubview(boltIcon)
         headerView.addSubview(appTitleLabel)
+        // ⭐ logoutButton ELIMINADO de aquí
 
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -139,37 +254,8 @@ class FeedViewController: UIViewController {
 
             appTitleLabel.topAnchor.constraint(equalTo: boltIcon.bottomAnchor, constant: 6),
             appTitleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-        ])
-    }
-    
-    private func setupUserCard() {
-        view.addSubview(userCard)
-        userCard.addSubview(userAvatarView)
-        userAvatarView.addSubview(userAvatarLabel)
-        userCard.addSubview(userNameLabel)
-        userCard.addSubview(userSubtitleLabel)
-        
-        NSLayoutConstraint.activate([
-            userCard.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 20),
-            userCard.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            userCard.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            userCard.heightAnchor.constraint(equalToConstant: 80),
             
-            userAvatarView.leadingAnchor.constraint(equalTo: userCard.leadingAnchor, constant: 16),
-            userAvatarView.centerYAnchor.constraint(equalTo: userCard.centerYAnchor),
-            userAvatarView.widthAnchor.constraint(equalToConstant: 50),
-            userAvatarView.heightAnchor.constraint(equalToConstant: 50),
-            
-            userAvatarLabel.centerXAnchor.constraint(equalTo: userAvatarView.centerXAnchor),
-            userAvatarLabel.centerYAnchor.constraint(equalTo: userAvatarView.centerYAnchor),
-            
-            userNameLabel.leadingAnchor.constraint(equalTo: userAvatarView.trailingAnchor, constant: 16),
-            userNameLabel.topAnchor.constraint(equalTo: userAvatarView.topAnchor, constant: 6),
-            userNameLabel.trailingAnchor.constraint(equalTo: userCard.trailingAnchor, constant: -16),
-            
-            userSubtitleLabel.leadingAnchor.constraint(equalTo: userNameLabel.leadingAnchor),
-            userSubtitleLabel.topAnchor.constraint(equalTo: userNameLabel.bottomAnchor, constant: 4),
-            userSubtitleLabel.trailingAnchor.constraint(equalTo: userNameLabel.trailingAnchor),
+            // ⭐ RESTRICCIONES DE LOGOUT ELIMINADAS (estaban relacionadas a appTitleLabel)
         ])
     }
     
@@ -178,7 +264,7 @@ class FeedViewController: UIViewController {
         view.addSubview(vehicleCountLabel)
         
         NSLayoutConstraint.activate([
-            sectionTitleLabel.topAnchor.constraint(equalTo: userCard.bottomAnchor, constant: 32),
+            sectionTitleLabel.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 24),
             sectionTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             
             vehicleCountLabel.centerYAnchor.constraint(equalTo: sectionTitleLabel.centerYAnchor),
@@ -217,20 +303,24 @@ class FeedViewController: UIViewController {
     
     private func updateVehicleCount() {
         let count = vehicles.count
-        vehicleCountLabel.text = count == 1 ? "1 vehículo" : "\(count) vehículos"
+        if isLoading {
+            vehicleCountLabel.text = "Cargando..."
+        } else if count == 0 {
+            vehicleCountLabel.text = "Sin vehículos"
+        } else {
+            vehicleCountLabel.text = count == 1 ? "1 vehículo" : "\(count) vehículos"
+        }
     }
 
     private func presentAddVehicleScreen() {
-        print("Navegando a la pantalla de Agregar Vehículo.")
-        
+        print("🚗 Navegando a la pantalla de Agregar Vehículo.")
         let addVC = AddVehicleController()
-        
         addVC.modalPresentationStyle = .fullScreen
         present(addVC, animated: true)
     }
 }
 
-
+// MARK: - UICollectionViewDataSource
 extension FeedViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 1
@@ -253,7 +343,7 @@ extension FeedViewController: UICollectionViewDataSource {
     }
 }
 
-
+// MARK: - UICollectionViewDelegateFlowLayout
 extension FeedViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let padding: CGFloat = 16
@@ -264,13 +354,13 @@ extension FeedViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.item < vehicles.count {
-            
             let selectedVehicle = vehicles[indexPath.item]
-            print("Navegando al detalle del vehículo: \(selectedVehicle.name)")
+            print("🚗 Navegando al detalle del vehículo: \(selectedVehicle.marca) \(selectedVehicle.modelo)")
             
-            let detailVC = VehicleDetailController(vehicle: selectedVehicle)
-            detailVC.modalPresentationStyle = .fullScreen
-            present(detailVC, animated: true)
+            // ⭐ AQUI NAVEGARÍAS AL DETALLE DEL VEHÍCULO
+            // let detailVC = VehicleDetailController(vehicle: selectedVehicle)
+            // detailVC.modalPresentationStyle = .fullScreen
+            // present(detailVC, animated: true)
             
         } else {
             presentAddVehicleScreen()
@@ -278,78 +368,82 @@ extension FeedViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
-struct Vehicle {
-    let name: String
-    let imageName: String
-    let battery: Int
-    let status: String
-    let chargeLevel: Int
-    let humidity: Int
-    let temperature: Double
-}
-
-
+// MARK: - VehicleCell
 class VehicleCell: UICollectionViewCell {
     static let reuseIdentifier = "VehicleCell"
     
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
+        // ⭐ Fondo oscuro para la celda
+        view.backgroundColor = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
         view.layer.cornerRadius = 16
-        view.layer.shadowColor = UIColor.black.cgColor
+        // Sombra suave en color neón para el efecto "caja encendida"
+        view.layer.shadowColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 0.2).cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
         view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.12
+        view.layer.shadowOpacity = 1.0
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
-    private let imageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        return iv
-    }()
-    
-    private let nameLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
-        label.textAlignment = .center
-        label.numberOfLines = 2
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let batteryContainerView: UIView = {
+    private let carIconView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1.0)
-        view.layer.cornerRadius = 8
+        view.backgroundColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 0.1)
+        view.layer.cornerRadius = 40
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
-    private let batteryIcon: UIImageView = {
+    private let carIcon: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(systemName: "bolt.fill")
+        iv.image = UIImage(systemName: "car.fill")
         iv.tintColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
-    private let batteryLabel: UILabel = {
+    private let marcaLabel: UILabel = {
         let label = UILabel()
-        label.textColor = UIColor(red: 60/255, green: 60/255, blue: 60/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        // ⭐ Texto blanco
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
+    private let modeloLabel: UILabel = {
+        let label = UILabel()
+        // ⭐ Texto gris claro
+        label.textColor = UIColor(red: 180/255, green: 180/255, blue: 180/255, alpha: 1.0)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    // ⭐ SE OCULTA añoLabel (sin cambios, ya estaba oculto)
+    private let añoLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor(red: 140/255, green: 140/255, blue: 140/255, alpha: 1.0)
+        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+    
+    // ⭐ ELIMINAMOS batteryContainerView
+    // private let batteryContainerView: UIView = { ... }()
+    // private let batteryIcon: UIImageView = { ... }()
+    // private let batteryLabel: UILabel = { ... }()
+    
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.textColor = UIColor(red: 120/255, green: 120/255, blue: 120/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        // ⭐ Texto gris claro
+        label.textColor = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1.0)
+        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // Hacemos la fuente un poco más grande
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -366,11 +460,15 @@ class VehicleCell: UICollectionViewCell {
     
     private func setupCell() {
         contentView.addSubview(containerView)
-        containerView.addSubview(imageView)
-        containerView.addSubview(nameLabel)
-        containerView.addSubview(batteryContainerView)
-        batteryContainerView.addSubview(batteryIcon)
-        batteryContainerView.addSubview(batteryLabel)
+        containerView.addSubview(carIconView)
+        carIconView.addSubview(carIcon)
+        containerView.addSubview(marcaLabel)
+        containerView.addSubview(modeloLabel)
+        containerView.addSubview(añoLabel)
+        // ⭐ ELIMINAMOS elementos de batería
+        // containerView.addSubview(batteryContainerView)
+        // batteryContainerView.addSubview(batteryIcon)
+        // batteryContainerView.addSubview(batteryLabel)
         containerView.addSubview(statusLabel)
         
         NSLayoutConstraint.activate([
@@ -379,43 +477,77 @@ class VehicleCell: UICollectionViewCell {
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
-            imageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
-            imageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            imageView.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.85),
-            imageView.heightAnchor.constraint(equalTo: containerView.heightAnchor, multiplier: 0.4),
+            carIconView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
+            carIconView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            carIconView.widthAnchor.constraint(equalToConstant: 80),
+            carIconView.heightAnchor.constraint(equalToConstant: 80),
             
-            nameLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 12),
-            nameLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
-            nameLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            carIcon.centerXAnchor.constraint(equalTo: carIconView.centerXAnchor),
+            carIcon.centerYAnchor.constraint(equalTo: carIconView.centerYAnchor),
+            carIcon.widthAnchor.constraint(equalToConstant: 40),
+            carIcon.heightAnchor.constraint(equalToConstant: 40),
             
-            batteryContainerView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
-            batteryContainerView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            batteryContainerView.heightAnchor.constraint(equalToConstant: 28),
-            batteryContainerView.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.7),
+            marcaLabel.topAnchor.constraint(equalTo: carIconView.bottomAnchor, constant: 12),
+            marcaLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            marcaLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             
-            batteryIcon.leadingAnchor.constraint(equalTo: batteryContainerView.leadingAnchor, constant: 8),
-            batteryIcon.centerYAnchor.constraint(equalTo: batteryContainerView.centerYAnchor),
-            batteryIcon.widthAnchor.constraint(equalToConstant: 14),
-            batteryIcon.heightAnchor.constraint(equalToConstant: 14),
+            modeloLabel.topAnchor.constraint(equalTo: marcaLabel.bottomAnchor, constant: 4),
+            modeloLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            modeloLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             
-            batteryLabel.leadingAnchor.constraint(equalTo: batteryIcon.trailingAnchor, constant: 6),
-            batteryLabel.centerYAnchor.constraint(equalTo: batteryContainerView.centerYAnchor),
-            batteryLabel.trailingAnchor.constraint(equalTo: batteryContainerView.trailingAnchor, constant: -8),
-            
-            statusLabel.topAnchor.constraint(equalTo: batteryContainerView.bottomAnchor, constant: 8),
+            // ⭐️ RESTRICCIÓN CLAVE: Status Label va después de Modelo Label
+            statusLabel.topAnchor.constraint(equalTo: modeloLabel.bottomAnchor, constant: 20), // Espacio extra
             statusLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            statusLabel.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -12)
+            statusLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            statusLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            statusLabel.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -16)
+            
+            // ⭐ RESTRICCIONES DE BATERÍA ELIMINADAS
         ])
     }
     
     func configure(with vehicle: Vehicle) {
-        imageView.image = UIImage(named: vehicle.imageName)
-        nameLabel.text = vehicle.name
-        batteryLabel.text = "\(vehicle.battery)%"
-        statusLabel.text = vehicle.status
+        marcaLabel.text = vehicle.marca
+        modeloLabel.text = vehicle.modelo
+        
+        añoLabel.isHidden = true
+        
+        // ⭐ ELIMINAMOS REFERENCIA A batteryLabel
+        // batteryLabel.text = "\(vehicle.cargaBateria)%"
+        
+        // Traducir estado
+        let estadoTraducido: String
+        switch vehicle.estado.lowercased() {
+        case "iniciado":
+            estadoTraducido = "En Uso"
+        case "cargando":
+            estadoTraducido = "Cargando"
+        case "completo":
+            estadoTraducido = "Carga Completa"
+        default:
+            estadoTraducido = vehicle.estado.capitalized
+        }
+        statusLabel.text = "Estado: \(estadoTraducido)" // Indicamos que es el estado
+        
+        // Cambiar color del ícono según el estado
+        let iconColor: UIColor
+        switch vehicle.estado.lowercased() {
+        case "iniciado":
+            iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0) // Verde
+        case "cargando":
+            iconColor = UIColor(red: 255/255, green: 193/255, blue: 7/255, alpha: 1.0) // Amarillo
+        case "completo":
+            iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0) // Verde
+        default:
+            iconColor = UIColor(red: 120/255, green: 120/255, blue: 120/255, alpha: 1.0) // Gris
+        }
+        
+        carIcon.tintColor = iconColor
+        carIconView.backgroundColor = iconColor.withAlphaComponent(0.1)
     }
 }
 
+// MARK: - AddVehicleCell
 class AddVehicleCell: UICollectionViewCell {
     static let reuseIdentifier = "AddVehicleCell"
     
