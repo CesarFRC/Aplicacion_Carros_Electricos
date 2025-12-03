@@ -66,10 +66,6 @@ class FeedViewController: UIViewController {
         return label
     }()
     
-    // ⭐ ELIMINAMOS logoutButton y su lógica
-    // private lazy var logoutButton: UIButton = { ... }()
-    // @objc private func logoutTapped() { ... }
-    
     private let sectionTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Mis Vehículos"
@@ -239,7 +235,6 @@ class FeedViewController: UIViewController {
         view.addSubview(headerView)
         headerView.addSubview(boltIcon)
         headerView.addSubview(appTitleLabel)
-        // ⭐ logoutButton ELIMINADO de aquí
 
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -254,8 +249,6 @@ class FeedViewController: UIViewController {
 
             appTitleLabel.topAnchor.constraint(equalTo: boltIcon.bottomAnchor, constant: 6),
             appTitleLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            
-            // ⭐ RESTRICCIONES DE LOGOUT ELIMINADAS (estaban relacionadas a appTitleLabel)
         ])
     }
     
@@ -357,10 +350,10 @@ extension FeedViewController: UICollectionViewDelegateFlowLayout {
             let selectedVehicle = vehicles[indexPath.item]
             print("🚗 Navegando al detalle del vehículo: \(selectedVehicle.marca) \(selectedVehicle.modelo)")
             
-            // ⭐ AQUI NAVEGARÍAS AL DETALLE DEL VEHÍCULO
-            // let detailVC = VehicleDetailController(vehicle: selectedVehicle)
-            // detailVC.modalPresentationStyle = .fullScreen
-            // present(detailVC, animated: true)
+            // ⭐ NAVEGACIÓN AL DETALLE DEL VEHÍCULO
+            let detailVC = VehicleDetailController(vehicle: selectedVehicle)
+            detailVC.modalPresentationStyle = .fullScreen
+            present(detailVC, animated: true)
             
         } else {
             presentAddVehicleScreen()
@@ -374,10 +367,8 @@ class VehicleCell: UICollectionViewCell {
     
     private let containerView: UIView = {
         let view = UIView()
-        // ⭐ Fondo oscuro para la celda
         view.backgroundColor = UIColor(red: 30/255, green: 30/255, blue: 30/255, alpha: 1.0)
         view.layer.cornerRadius = 16
-        // Sombra suave en color neón para el efecto "caja encendida"
         view.layer.shadowColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 0.2).cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
         view.layer.shadowRadius = 8
@@ -405,7 +396,6 @@ class VehicleCell: UICollectionViewCell {
     
     private let marcaLabel: UILabel = {
         let label = UILabel()
-        // ⭐ Texto blanco
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         label.textAlignment = .center
@@ -415,7 +405,6 @@ class VehicleCell: UICollectionViewCell {
     
     private let modeloLabel: UILabel = {
         let label = UILabel()
-        // ⭐ Texto gris claro
         label.textColor = UIColor(red: 180/255, green: 180/255, blue: 180/255, alpha: 1.0)
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
@@ -423,7 +412,6 @@ class VehicleCell: UICollectionViewCell {
         return label
     }()
     
-    // ⭐ SE OCULTA añoLabel (sin cambios, ya estaba oculto)
     private let añoLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor(red: 140/255, green: 140/255, blue: 140/255, alpha: 1.0)
@@ -434,16 +422,10 @@ class VehicleCell: UICollectionViewCell {
         return label
     }()
     
-    // ⭐ ELIMINAMOS batteryContainerView
-    // private let batteryContainerView: UIView = { ... }()
-    // private let batteryIcon: UIImageView = { ... }()
-    // private let batteryLabel: UILabel = { ... }()
-    
     private let statusLabel: UILabel = {
         let label = UILabel()
-        // ⭐ Texto gris claro
         label.textColor = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1.0)
-        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // Hacemos la fuente un poco más grande
+        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -465,10 +447,6 @@ class VehicleCell: UICollectionViewCell {
         containerView.addSubview(marcaLabel)
         containerView.addSubview(modeloLabel)
         containerView.addSubview(añoLabel)
-        // ⭐ ELIMINAMOS elementos de batería
-        // containerView.addSubview(batteryContainerView)
-        // batteryContainerView.addSubview(batteryIcon)
-        // batteryContainerView.addSubview(batteryLabel)
         containerView.addSubview(statusLabel)
         
         NSLayoutConstraint.activate([
@@ -495,14 +473,11 @@ class VehicleCell: UICollectionViewCell {
             modeloLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             modeloLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             
-            // ⭐️ RESTRICCIÓN CLAVE: Status Label va después de Modelo Label
-            statusLabel.topAnchor.constraint(equalTo: modeloLabel.bottomAnchor, constant: 20), // Espacio extra
+            statusLabel.topAnchor.constraint(equalTo: modeloLabel.bottomAnchor, constant: 20),
             statusLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             statusLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             statusLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             statusLabel.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor, constant: -16)
-            
-            // ⭐ RESTRICCIONES DE BATERÍA ELIMINADAS
         ])
     }
     
@@ -511,9 +486,6 @@ class VehicleCell: UICollectionViewCell {
         modeloLabel.text = vehicle.modelo
         
         añoLabel.isHidden = true
-        
-        // ⭐ ELIMINAMOS REFERENCIA A batteryLabel
-        // batteryLabel.text = "\(vehicle.cargaBateria)%"
         
         // Traducir estado
         let estadoTraducido: String
@@ -527,19 +499,19 @@ class VehicleCell: UICollectionViewCell {
         default:
             estadoTraducido = vehicle.estado.capitalized
         }
-        statusLabel.text = "Estado: \(estadoTraducido)" // Indicamos que es el estado
+        statusLabel.text = "Estado: \(estadoTraducido)"
         
         // Cambiar color del ícono según el estado
         let iconColor: UIColor
         switch vehicle.estado.lowercased() {
         case "iniciado":
-            iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0) // Verde
+            iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
         case "cargando":
-            iconColor = UIColor(red: 255/255, green: 193/255, blue: 7/255, alpha: 1.0) // Amarillo
+            iconColor = UIColor(red: 255/255, green: 193/255, blue: 7/255, alpha: 1.0)
         case "completo":
-            iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0) // Verde
+            iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
         default:
-            iconColor = UIColor(red: 120/255, green: 120/255, blue: 120/255, alpha: 1.0) // Gris
+            iconColor = UIColor(red: 120/255, green: 120/255, blue: 120/255, alpha: 1.0)
         }
         
         carIcon.tintColor = iconColor
