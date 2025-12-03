@@ -318,10 +318,10 @@ class SensorCardWithChart: UIView {
             
         case "VOLT":
             iconName = "bolt.fill"
-            title = "Voltaje"
+            title = "Bateria"
             iconColor = UIColor(red: 57/255, green: 255/255, blue: 20/255, alpha: 1.0)
             formattedValue = String(format: "%.1f", sensor.valor)
-            unit = "V"
+            unit = "%"
             
         case "DIST":
             iconName = "ruler.fill"
@@ -766,9 +766,9 @@ class VehicleDetailController: UIViewController {
             unit = "°C"
         case "VOLT":
             iconName = "bolt.fill"
-            title = "Voltaje"
+            title = "Bateria"
             iconColor = neonGreen
-            unit = "V"
+            unit = "%"
         case "DIST":
             iconName = "ruler.fill"
             title = "Distancia"
