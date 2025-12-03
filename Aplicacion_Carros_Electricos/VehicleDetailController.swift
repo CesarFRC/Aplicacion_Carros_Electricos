@@ -572,6 +572,7 @@ class VehicleDetailController: UIViewController {
     // MARK: - Timer de Actualización
     private func startAutoUpdate() {
         updateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+            self?.fetchHistoricalData()
             self?.fetchVehicleData()
         }
     }
@@ -844,12 +845,10 @@ class VehicleDetailController: UIViewController {
         stackView.spacing = 1
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
-        // Tomar los últimos 10 registros
-        let recentData = Array(dataPoints.suffix(10).reversed())
-        
+        let recentData = Array(dataPoints.suffix(9).reversed())
         for (index, dataPoint) in recentData.enumerated() {
-            let rowView = createDataRow(dataPoint: dataPoint, unit: unit, color: color, isEven: index % 2 == 0)
-            stackView.addArrangedSubview(rowView)
+                let rowView = createDataRow(dataPoint: dataPoint, unit: unit, color: color, isEven: index % 2 == 0)
+                stackView.addArrangedSubview(rowView)
         }
         
         tableContainer.addSubview(stackView)
